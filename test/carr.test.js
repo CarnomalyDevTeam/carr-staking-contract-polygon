@@ -1,52 +1,50 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-let mainWallet = "0x13Ba9082B3232253e89356d6906751A7f89d4F75";
-let secondaryWallet = "0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C";
-
-// Start test block
 describe('Carr', function () {
-  let owner
-  let addr1
-  let addr2
-
-  before(async function () {
-    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-    this.CarrContract = await ethers.getContractFactory("CARR");
-  });
+  let owner;
+  let addr1;
+  let addr2;
 
   beforeEach(async function () {
-    this.carr = await this.CarrContract.deploy();
-    await this.carr.deployed();
+    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+    const Token = await ethers.getContractFactory("CARR");
+    carrToken = await Token.deploy();
   });
 
-  // Test case
+  describe("Deployment", async function () {
+    describe("Ownership", async function () {
+      it("Is owned by the deployer", async function () {
+        expect(await carrToken.isOwner()).to.equal(owner.address);
+      });
+      it("Allows successful ownership transfer to another wallet", async function () {
+        await carrToken.transferOwnership(addr2.address);
+        expect(await carrToken.isOwner()).to.equal(addr2.address);
+      });
+    });
+  });
+
   describe('Balances', function () {
     it('Checking owner wallet', async function () {
-      expect((await this.carr.balanceOf("0x13Ba9082B3232253e89356d6906751A7f89d4F75")).toString());
+      expect((await carrToken.balanceOf(owner.address)).toString());
     });
-
     it('Checking 2nd wallet', async function () {
-      expect((await this.carr.balanceOf("0xa26B07d42a57b25F141A77390718033AB425eE02")).toString());
+      expect((await carrToken.balanceOf(addr2.address)).toString());
     });
-
     it('Checking 3rd address', async function () {
-      expect((await this.carr.balanceOf("0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C")).toString());
+      expect((await carrToken.balanceOf(addr1.address)).toString());
     });
-
     // it('Approve', async function () {
     //   console.log(await this.carr.approve(addr2.address, "5000"));
     //   expect(await this.carr.approve(addr2.address, "5000")).to.be.true;
     // });
-
     it('Transferring to 3rd address', async function () {
-      await this.carr.transfer(addr2.address, "5000");
-      expect(await this.carr.balanceOf(addr2.address)).to.equal("5000");
+      await carrToken.transfer(addr2.address, "5000");
+      expect(await carrToken.balanceOf(addr2.address)).to.equal("5000");
     });
-
     it('Checking 3rd address after transfer', async function () {
-      console.log(await this.carr.balanceOf("0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C"));
-      expect((await this.carr.balanceOf("0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C")).toString());
+      console.log(await carrToken.balanceOf("0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C"));
+      expect((await carrToken.balanceOf("0xA3913b48F7E48BdFe6E7d9F0b27A7EEd52E1De3C")).toString());
     });
   });
 });
