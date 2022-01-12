@@ -41,7 +41,7 @@ export default {
         version: "0.4.23"
       },
       {
-        version: "0.8.0"
+        version: "0.8.9"
       }
     ]
   },

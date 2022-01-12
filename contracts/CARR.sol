@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Carnomaly
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -537,6 +537,10 @@ contract Ownable {
     owner = address(0);
   }
 
+  function isOwner() public view returns (address) {
+    return owner;
+  }
+
   /**
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param _newOwner The address to transfer ownership to.
@@ -632,17 +636,22 @@ contract Staking is Ownable, ReentrancyGuard {
     event Withdrawn(address indexed user, uint256 amount);
     event StakingEnds(uint256 newTimestamp);
 
-    constructor(address _stakingToken) {
-        stakingToken = IERC20(_stakingToken);
+    constructor() {
+        stakingToken = IERC20(address(this));
         _periodFinish = block.timestamp + 31536000;
         emit StakingEnds(_periodFinish);
     }
+
+    // constructor() {
+    //     _periodFinish = block.timestamp + 31536000;
+    //     emit StakingEnds(_periodFinish);
+    // }
 
     function totalSupplyStake() external view returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address _user) external view returns (uint256) {
+    function balanceOfStaked(address _user) external view returns (uint256) {
         return _stake[_user];
     }
 
@@ -1064,7 +1073,7 @@ contract Consts {
 
 
 
-contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable
+contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Staking
     
 {
     
@@ -1075,7 +1084,6 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable
         init();
         transferOwnership(TARGET_USER);
     }
-    
 
     function name() public pure returns (string memory _name) {
         return TOKEN_NAME;
@@ -1089,15 +1097,15 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable
         return TOKEN_DECIMALS_UINT8;
     }
 
-    // function transferFrom(address _from, address _to, uint256 _value) public override(StandardToken) returns (bool _success) {
-    //     require(!paused);
-    //     return super.transferFrom(_from, _to, _value);
-    // }
+    function transferFrom(address _from, address _to, uint256 _value) public override(StandardToken) returns (bool _success) {
+        require(!paused);
+        return super.transferFrom(_from, _to, _value);
+    }
 
-    // function transfer(address _to, uint256 _value) public returns (bool _success) {
-    //     require(!paused);
-    //     return super.transfer(_to, _value);
-    // }
+    function transfer(address _to, uint256 _value) public override returns (bool _success) {
+        require(!paused);
+        return super.transfer(_to, _value);
+    }
 
     
     function init() private {
@@ -1109,7 +1117,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable
         }
 
         
-        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512)];
+        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
         uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
         uint64[2] memory freezes = [uint64(0), uint64(0)];
 
