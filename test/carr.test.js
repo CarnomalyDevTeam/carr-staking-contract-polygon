@@ -50,21 +50,18 @@ describe('Carnomaly', function () {
 
   describe('Staking Tests:', function () {
     describe('Staking', function () {
-      it('Receives tokens to Staking for liquidity', async function () {
+      it('Receives liquidity tokens for Staking', async function () {
         await carrToken.transfer(carrToken.address, "150000");
         expect(await carrToken.balanceOf(carrToken.address)).to.equal("150000");
       });
-      it("Accepts deposits", async function () {
-        await carrToken.approve(owner.address, "500");  // owner stakes qty
-        // console.log(await carrToken.totalSupplyStake())
-        await carrToken.stake("500")
-        expect(await carrToken.totalSupplyStake()).to.equal("500")
-        // depositTime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp;
-        // expect(await carrToken.balanceOf(owner.address)).to.equal(qty);
+      it("Accepts staking deposits", async function () {
+        await carrToken.approve(carrToken.address, "500");  // owner stakes qty
+        await carrToken.stake("500");
+        expect(await carrToken.balanceOfStaked(owner.address)).to.equal("500");
       });
-      // it("Has expected totalSupply", async function () {
-      //   expect(await carrToken.totalSupply()).to.equal("150000");
-      // });      
+      it("Has expected staked totalSupply", async function () {
+        expect(await carrToken.totalSupplyStake()).to.equal("500");
+      });      
     })
   });
 });

@@ -47,8 +47,8 @@ abstract contract ERC20 is ERC20Basic {
   function allowance(address owner, address spender)
     public virtual returns (uint256);
 
-  function transferFrom(address from, address to, uint256 value)
-    public virtual returns (bool);
+//   function transferFrom(address from, address to, uint256 value)
+//     public virtual returns (bool);
 
   function approve(address spender, uint256 value) public virtual returns (bool);
   event Approval(
@@ -395,7 +395,7 @@ contract StandardToken is ERC20, BasicToken {
     uint256 _value
   )
     public
-    override
+    virtual
     returns (bool)
   {
     require(_to != address(0));
@@ -627,7 +627,7 @@ contract Staking is Ownable, ReentrancyGuard {
     IERC20 public stakingToken;
     uint256 private _totalSupply;
     uint256 private _periodFinish;
-    address[] private _stakers;
+    address[] public _stakers;
     mapping(address => uint256) private _stake;
     mapping(address => uint256) private _updated;
 
@@ -1097,7 +1097,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
         return TOKEN_DECIMALS_UINT8;
     }
 
-    function transferFrom(address _from, address _to, uint256 _value) public override(StandardToken) returns (bool _success) {
+    function transferFrom(address _from, address _to, uint256 _value) public override returns (bool _success) {
         require(!paused);
         return super.transferFrom(_from, _to, _value);
     }
