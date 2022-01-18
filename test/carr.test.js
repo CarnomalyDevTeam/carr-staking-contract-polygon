@@ -19,7 +19,7 @@ describe('Carnomaly', function () {
     console.log(carrToken.address);
   });
 
-  describe('ERC20 Tests:', function () {
+  describe('ERC20 Tests:', async function () {
     describe("Deployment", async function () {
       describe("Metadata", async function () { 
         it("Has a name", async function () {
@@ -36,13 +36,15 @@ describe('Carnomaly', function () {
         it("Is owned by the deployer", async function () {
           expect(await carrToken.isOwner()).to.equal(owner.address);
         });
-        // it("Allows successful ownership transfer to another wallet", async function () {
-        //   await carrToken.transferOwnership(addr2.address);
-        //   expect(await carrToken.isOwner()).to.equal(addr2.address);
-        // });
+        it("Can transfer ownership to co-owner", async function () {
+          await carrToken.transferOwnership(addr1.address);
+          expect(await carrToken.isOwner()).to.equal(addr1.address);
+          //transfer back to owner wallet
+          await carrToken.connect(addr1).transferOwnership(owner.address);
+        });
       });
     });
-    describe('Balances', function () {
+    describe('Balances', async function () {
       it('Has a total supply', async function () { 
         expect(await carrToken.totalSupply()).to.equal("10000000000000000000000000");
       });
@@ -74,11 +76,15 @@ describe('Carnomaly', function () {
           expect(await carrToken.balanceOf(addr2.address)).to.equal(5500);
         })
       });
+      describe("Mint&Freeze", async function () { 
+        // it('Can mint tokens usable in future', async function () { 
+        //   await carrToken.mintAndFreeze()
+        // });
+      });
     });
   });
-
-  describe('Staking Tests:', function () {
-    describe('Staking', function () {
+  describe('Staking Tests:', async function () {
+    describe('Staking', async function () {
       it("Has no rewards initially", async function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("0");
       });
@@ -121,6 +127,7 @@ describe('Carnomaly', function () {
   
     })
   });
+
   async function ff(t) {
     let block = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const deltaT = depositTime + t - block.timestamp;
