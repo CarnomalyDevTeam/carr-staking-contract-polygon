@@ -21,6 +21,17 @@ describe('Carnomaly', function () {
 
   describe('ERC20 Tests:', function () {
     describe("Deployment", async function () {
+      describe("Metadata", async function () { 
+        it("Has a name", async function () {
+          expect(await carrToken.name()).to.equal("Carnomaly");
+        });
+        it("Has a symbol", async function () { 
+          expect(await carrToken.symbol()).to.equal("CARR");
+        });
+        it("Describes the decimal precision", async function () { 
+          expect(await carrToken.decimals()).to.equal(18);
+        });
+      });
       describe("Ownership", async function () {
         it("Is owned by the deployer", async function () {
           expect(await carrToken.isOwner()).to.equal(owner.address);
@@ -31,16 +42,18 @@ describe('Carnomaly', function () {
         // });
       });
     });
-  
     describe('Balances', function () {
-      it('Has an owner wallet', async function () {
-        expect((await carrToken.balanceOf(owner.address)).toString());
+      it('Has a total supply', async function () { 
+        expect(await carrToken.totalSupply()).to.equal("10000000000000000000000000");
       });
-      it('Has a secondary owner wallet', async function () {
-        expect((await carrToken.balanceOf(addr2.address)).toString());
+      it('Has a funded owner wallet', async function () {
+        expect(await carrToken.balanceOf(owner.address)).to.equal("5000000000000000000000000");
       });
-      it('Has a consumer wallet', async function () {
-        expect((await carrToken.balanceOf(addr1.address)).toString());
+      it('Has a funded secondary owner wallet', async function () {
+        expect(await carrToken.balanceOf(addr1.address)).to.equal("5000000000000000000000000");
+      });
+      it('Has an empty consumer wallet', async function () {
+        expect(await carrToken.balanceOf(addr2.address)).to.equal(0);
       });
       // it('Approves', async function () {
       //   console.log(await this.carr.approve(addr2.address, "5000"));
@@ -49,6 +62,17 @@ describe('Carnomaly', function () {
       it('Transfers 5000 to consumer wallet', async function () {
         await carrToken.transfer(addr2.address, "5000");
         expect(await carrToken.balanceOf(addr2.address)).to.equal("5000");
+      });
+      describe("Pausable", async function () {
+        it('Can be paused on emergency', async function () {
+          await carrToken.pause();
+          await expect(carrToken.transfer(addr2.address, "500")).to.be.revertedWith("Transaction reverted without a reason string");
+        })
+        it('Can be resumed (unpaused)', async function () {
+          await carrToken.unpause();
+          await carrToken.transfer(addr2.address, "500");
+          expect(await carrToken.balanceOf(addr2.address)).to.equal(5500);
+        })
       });
     });
   });
