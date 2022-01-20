@@ -1066,8 +1066,7 @@ contract Consts {
     bool public constant PAUSED = false;
     address public constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     
-    
-    bool public constant CONTINUE_MINTING = false;
+    bool public constant CONTINUE_MINTING = true;
 }
 
 
