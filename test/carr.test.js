@@ -119,7 +119,7 @@ describe('Carnomaly', function () {
         expect(await carrToken.balanceOf(carrToken.address)).to.equal("150000");
       });
       it("Accepts staking deposits", async function () {
-        await carrToken.approve(carrToken.address, "150000");  // owner stakes qty
+        // await carrToken.approve(carrToken.address, "150000");  // owner stakes qty
         depositTime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp;
         await carrToken.stake("150000");
         expect(await carrToken.balanceOfStaked(owner.address)).to.equal("150000");

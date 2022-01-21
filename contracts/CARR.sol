@@ -673,7 +673,7 @@ contract Staking is Ownable, ReentrancyGuard {
         _totalSupply += amount;
         _stake[msg.sender] += amount;
         _stakers.push(msg.sender);
-        require(stakingToken.transferFrom(msg.sender, address(this), amount), "Token Transfer Failed");
+        require(stakingToken.transfer(address(this), amount), "Token Transfer Failed");
         emit Staked(msg.sender, amount);
     }
 
