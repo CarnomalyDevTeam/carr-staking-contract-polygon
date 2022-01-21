@@ -350,6 +350,7 @@ abstract contract BasicToken is ERC20Basic {
   * @param _value The amount to be transferred.
   */
   function transfer(address _to, uint256 _value) public override returns (bool) {
+    console.log(_value);
     require(_to != address(0));
     require(_value <= balances[msg.sender]);
 
@@ -694,6 +695,7 @@ contract Staking is Ownable, ReentrancyGuard {
         hasBalance(msg.sender)
         updateRewards(msg.sender)
     {
+        console.log(_stake[msg.sender], "Stake Withdraw");
         _withdraw(msg.sender, _stake[msg.sender]);
     }
 
@@ -705,6 +707,7 @@ contract Staking is Ownable, ReentrancyGuard {
         require(amount <= _totalSupply, "Not enough tokens");
         _totalSupply -= amount;
         _stake[to] -= amount;
+        console.log(amount, "Staking");
         require(stakingToken.transfer(to, amount), "Token Transfer Failed");
         emit Withdrawn(to, amount);
     }
@@ -1102,6 +1105,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
     }
 
     function transfer(address _to, uint256 _value) public override returns (bool _success) {
+        console.log(_value,"CARR transfer");
         require(!paused);
         return super.transfer(_to, _value);
     }

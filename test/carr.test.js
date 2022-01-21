@@ -143,9 +143,18 @@ describe('Carnomaly', function () {
       it("Has expected staked totalSupply", async function () {
         expect(await carrToken.totalSupplyStake()).to.equal("150000");
       });
-      // it("Has ability to withdraw stake", async function () {
-        
-      // });
+      it("Has a staked amount of 33210", async function () {
+        expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
+      });
+      it("Has ability to withdraw all stake of 33210", async function () {
+        console.log(await carrToken.rewardsOf(owner.address));
+        console.log(await carrToken.balanceOf(owner.address));
+        await carrToken.withdraw(33210);
+        expect(await carrToken.rewardsOf(owner.address)).to.equal(0);
+      });
+      it("33210 in rewards are reflected in wallet", async function () {
+        expect(await carrToken.balanceOf(owner.address)).to.equal("4999999999999999999877710");
+      });
       it("Set the finishTime to 1 year after deposit", async function () {
          // finish 1 year after deposit
         await expect(carrToken.setFinish(depositTime + 31536000)).to.emit(carrToken, "StakingEnds").withArgs(depositTime + 31536000);
