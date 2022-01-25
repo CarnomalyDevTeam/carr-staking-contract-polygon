@@ -115,7 +115,11 @@ describe('Carnomaly', function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("0");
       });
       it('Receives liquidity tokens for Staking', async function () {
-        await carrToken.transfer(carrToken.address, "550000");
+        await carrToken.transfer(carrToken.address, "551000");
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("551000");
+      });
+      it("Can recover CARR to owner address", async function () {
+        await expect(carrToken.recoverERC20("1000")).to.emit(carrToken, "Recovered").withArgs(carrToken.address, "1000")
         expect(await carrToken.balanceOf(carrToken.address)).to.equal("550000");
       });
       it("Accepts staking deposits", async function () {
@@ -124,6 +128,10 @@ describe('Carnomaly', function () {
         await carrToken.stake("150000");
         expect(await carrToken.balanceOfStaked(owner.address)).to.equal("150000");
       });
+      it("Set the finishTime to 1 year after deposit", async function () {
+        await expect(carrToken.setFinish(depositTime + 31536000))
+          .to.emit(carrToken, "StakingEnds").withArgs(depositTime + 31536000); // finish 1 year after deposit
+      });  
       it("Verifies interest after 1 month", async function () {
         await ff(month_in_seconds);
         expect(await carrToken.rewardsOf(owner.address)).to.equal(r.m1);
@@ -143,12 +151,16 @@ describe('Carnomaly', function () {
       it("Has expected staked totalSupply", async function () {
         expect(await carrToken.totalSupplyStake()).to.equal("150000");
       });
-      it("Has a staked amount of 33210", async function () {
+      it("Has a query for rewards amounting to 33210", async function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
       });
-      it("Has ability to withdraw all stake of 33210", async function () {
-        await carrToken.withdrawAll();
+      it("Has ability to withdraw partial stake of 33210 (reward amount)", async function () {
+        await carrToken.withdraw("33210");
         expect(await carrToken.rewardsOf(owner.address)).to.equal(0);
+      });
+      it("Has ability to withdraw all, the remainder", async function () { 
+        await carrToken.withdrawAll();
+        expect(await carrToken.balanceOfStaked(owner.address)).to.equal(0);
       });
       it("33210 in rewards are reflected in wallet", async function () {
         expect(await carrToken.balanceOf(owner.address)).to.equal("4999999999999999999627710");
@@ -158,6 +170,28 @@ describe('Carnomaly', function () {
         await expect(carrToken.setFinish(depositTime + 31536000)).to.emit(carrToken, "StakingEnds").withArgs(depositTime + 31536000);
       });
     })
+    describe("Finished", async function () { 
+      it("Stops accepting deposits", async function () {
+        // await ERC20Token.approve(Staking.address, qty);  // owner stakes qty
+        await expect(carrToken.stake("2000")).to.be.revertedWith("Staking period has ended");
+      });
+      it("Stops increasing rewards", async function () {
+        // await ff(month_in_seconds * 12 + 1);
+        // expect(await carrToken.rewardsOf(owner.address)).to.equal(r.m12);
+        // await ff(month_in_seconds * 13);
+        // expect(await carrToken.rewardsOf(owner.address)).to.equal(r.m12);
+      });
+      it("Allows withdrawals", async function () {
+        // emit Withdrawn(to, amount);
+
+        // await expect(carrToken.withdraw(qty))
+        //   .to.emit(carrToken, "Withdrawn").withArgs(owner.address, qty)
+        //   .to.emit(carrToken, 'Staked').withArgs(owner.address, r.m12);
+        // expect(await Staking.balanceOf(owner.address)).to.equal(r.m12);
+        // expect(await ERC20Token.balanceOf(owner.address)).to.equal("4900000000000000000000000");
+      });
+    
+    });
   });
 
   async function ff(t) {

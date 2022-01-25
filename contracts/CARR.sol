@@ -728,10 +728,10 @@ contract Staking is Ownable, ReentrancyGuard {
         emit StakingEnds(_finish);
     }
 
-    function recoverERC20(address addr, uint256 amt) public onlyOwner {
-        IERC20 theToken = IERC20(addr);
+    function recoverERC20(uint256 amt) public onlyOwner {
+        IERC20 theToken = IERC20(address(this));
         require(theToken.transfer(msg.sender, amt), "Token Transfer Failed");
-        emit Recovered(addr, amt);
+        emit Recovered(address(this), amt);
     }
 
     function tokensNeeded() public view returns(uint256) {
