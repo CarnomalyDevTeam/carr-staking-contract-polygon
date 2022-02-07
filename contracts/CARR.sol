@@ -508,10 +508,6 @@ contract Ownable {
     owner = address(0);
   }
 
-  function isOwner() public view returns (address) {
-    return owner;
-  }
-
   /**
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param _newOwner The address to transfer ownership to.
@@ -556,6 +552,11 @@ contract MintableToken is StandardToken, Ownable {
     _;
   }
 
+  modifier mintCap() {
+    require(totalSupply_ <= 999000000000000000000000000);
+    _;
+  }
+
   /**
    * @dev Function to mint tokens
    * @param _to The address that will receive the minted tokens.
@@ -568,6 +569,7 @@ contract MintableToken is StandardToken, Ownable {
   )
     hasMintPermission
     canMint
+    mintCap
     public
     returns (bool)
   {
@@ -623,7 +625,7 @@ contract Staking is Ownable, ReentrancyGuard {
             block.timestamp < _periodFinish ? block.timestamp : _periodFinish;
     }
 
-    function total() external view hasBalance(msg.sender) returns (uint256) {
+    function stakedSender() external view hasBalance(msg.sender) returns (uint256) {
         return _stake[msg.sender] + _getNewRewards(msg.sender);
     }
 
@@ -731,7 +733,7 @@ contract Staking is Ownable, ReentrancyGuard {
     }
 
     modifier hasBalance(address addr) {
-        require(_stake[addr] > 0, "No balance");
+        require(_stake[addr] > 0, "No staked balance");
         _;
     }
 }
@@ -1009,14 +1011,14 @@ contract FreezableMintableToken is FreezableToken, MintableToken {
 }
 
 contract Consts {
-    uint public constant TOKEN_DECIMALS = 18;
-    uint8 public constant TOKEN_DECIMALS_UINT8 = 18;
-    uint public constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
+    uint internal constant TOKEN_DECIMALS = 18;
+    uint8 internal constant TOKEN_DECIMALS_UINT8 = 18;
+    uint internal constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
 
-    string public constant TOKEN_NAME = "Carnomaly";
-    string public constant TOKEN_SYMBOL = "CARR";
-    bool public constant PAUSED = false;
-    address public constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    string internal constant TOKEN_NAME = "Carnomaly";
+    string internal constant TOKEN_SYMBOL = "CARR";
+    bool internal constant PAUSED = false;
+    address internal constant TARGET_USER = 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC;
     
     bool public constant CONTINUE_MINTING = true;
 }
@@ -1060,7 +1062,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
             pause();
         }
 
-        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
+        address[2] memory addresses = [address(0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
         uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
         uint64[2] memory freezes = [uint64(0), uint64(0)];
 

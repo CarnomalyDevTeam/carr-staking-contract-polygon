@@ -2,9 +2,11 @@ const hre = require("hardhat");
 
 async function main() {
   const Carr = await hre.ethers.getContractFactory("CARR");
-  const cartoken = await Carr.deploy();
+  const carrtoken = await Carr.deploy();
 
-  console.log("Carr contract deployed to:", cartoken.address);
+  await carrtoken.deployed();
+
+  console.log("Carr contract deployed to:", carrtoken.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
