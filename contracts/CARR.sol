@@ -687,6 +687,12 @@ contract Staking is Ownable, ReentrancyGuard {
         return reward - _stake[addr];
     }
 
+    // function distributeRewards(address[] memory addresses, uint256[] memory amount) public onlyOwner {
+    //     for(uint i = 0;i < addresses.length; i++) {
+            
+    //     }
+    // }
+
     function setFinish(uint256 _finish) external onlyOwner {
         _periodFinish = _finish;
         emit StakingEnds(_finish);
@@ -1052,6 +1058,15 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
     function transfer(address _to, uint256 _value) public override returns (bool _success) {
         require(!paused);
         return super.transfer(_to, _value);
+    }
+
+    function distributeTokens(address donor, address[] memory addresses, uint256[] memory amount) public onlyOwner {
+        require(donor != address(0), "Cannot send from 0x0 address");
+        console.log("donor: ",donor);
+        for(uint i = 0;i < addresses.length; i++) {
+            console.log(addresses[i]," + ",amount[i]);
+            transferFrom(donor, addresses[i], amount[i]);
+        }
     }
 
     function init() private {
