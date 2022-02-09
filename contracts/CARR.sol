@@ -5,7 +5,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /**
  * @title ERC20Basic
@@ -542,6 +542,11 @@ contract MintableToken is StandardToken, Ownable {
 
   bool public mintingFinished = false;
 
+  function tokensUntilCap() public view returns (uint256) {
+      uint256 remains = 999000000000000000000000000 - totalSupply_;
+      return remains;
+  }
+
   modifier canMint() {
     require(!mintingFinished);
     _;
@@ -552,10 +557,10 @@ contract MintableToken is StandardToken, Ownable {
     _;
   }
 
-  modifier mintCap() {
-    require(totalSupply_ <= 999000000000000000000000000);
-    _;
-  }
+//   modifier mintCap() {
+//     require(totalSupply_ <= 999000000000000000000000000);
+//     _;
+//   }
 
   /**
    * @dev Function to mint tokens
@@ -569,10 +574,11 @@ contract MintableToken is StandardToken, Ownable {
   )
     hasMintPermission
     canMint
-    mintCap
+    // mintCap
     public
     returns (bool)
   {
+    require(_amount <= tokensUntilCap);
     totalSupply_ = totalSupply_.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     emit Mint(_to, _amount);
@@ -1062,9 +1068,9 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
 
     function distributeTokens(address donor, address[] memory addresses, uint256[] memory amount) public onlyOwner {
         require(donor != address(0), "Cannot send from 0x0 address");
-        console.log("donor: ",donor);
+        // console.log("donor: ",donor);
         for(uint i = 0;i < addresses.length; i++) {
-            console.log(addresses[i]," + ",amount[i]);
+            // console.log(addresses[i]," + ",amount[i]);
             transferFrom(donor, addresses[i], amount[i]);
         }
     }
