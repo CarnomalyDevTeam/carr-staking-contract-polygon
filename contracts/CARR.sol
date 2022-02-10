@@ -578,7 +578,8 @@ contract MintableToken is StandardToken, Ownable {
     public
     returns (bool)
   {
-    require(_amount <= tokensUntilCap);
+    uint256 tknCap = tokensUntilCap();
+    require(_amount <= tknCap);
     totalSupply_ = totalSupply_.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     emit Mint(_to, _amount);
@@ -597,7 +598,7 @@ contract MintableToken is StandardToken, Ownable {
   }
 }
 
-contract Staking is Ownable, ReentrancyGuard {
+contract Staking is ReentrancyGuard, MintableToken {
     using SafeERC20 for IERC20;
 
     IERC20 public stakingToken;
@@ -644,7 +645,7 @@ contract Staking is Ownable, ReentrancyGuard {
         _totalSupply += amount;
         _stake[msg.sender] += amount;
         _stakers.push(msg.sender);
-        require(stakingToken.transfer(address(this), amount), "Token Transfer Failed");
+        require(transfer(address(this), amount), "Token Transfer Failed");
         emit Staked(msg.sender, amount);
     }
 
