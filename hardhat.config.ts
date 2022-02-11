@@ -52,12 +52,12 @@ export default {
       forking: forkingData
     },
     local: {
-      url: "http://127.0.0.1:8545",
+      url: "http://localhost:13755/ext/bc/C/rpc",
       gasPrice: 225000000000,
       chainId: 43112,
       accounts: [
         "0x56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027",
-        "0x7b4198529994b0dc604278c99d153cfd069d594753d471171a1d102a10438e07"
+        "0x7b4198529994b0dc604278c99d153cfd069d594753d471171a1d102a10438e07",
       ]
     },
     fuji: {
