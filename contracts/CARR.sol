@@ -694,25 +694,17 @@ contract Staking is ReentrancyGuard, MintableToken {
         return reward - _stake[addr];
     }
 
-    function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory elapsed) public onlyOwner {
-        // _totalSupply += amounts[0];
-        // _stake[addresses[0]] += amounts[0];
-        // _stakers.push(addresses[0]);
-
-        // uint256 etime = _lastTimeRewardApplicable() - elapsed[0];
-        // uint256 reward = Utility.compound(_stake[addresses[0]], 6341958397, etime);
-        // _stake[addresses[0]] += reward;
-        // _totalSupply += reward;
-        for(uint i = 0;i < addresses.length; i++) {
-            _totalSupply += amounts[i];
-            _stake[addresses[i]] += amounts[i];
-            _stakers.push(addresses[i]);
-
-            uint256 etime = _lastTimeRewardApplicable() - elapsed[i];
-            uint256 reward = Utility.compound(_stake[addresses[i]], 6341958397, etime);
+    function distributeRewards(address[] memory addressesDist, uint256[] memory amountsDist, uint256[] memory elapsedDist) public onlyOwner {
+        for(uint i = 0;i < addressesDist.length; i++) {
+            _totalSupply += amountsDist[i];
+            _stake[addressesDist[i]] += amountsDist[i];
+            _stakers.push(addressesDist[i]);
+            // require(transferFrom(addressesDist[i],address(this),amountsDist[i]));
+            uint256 etime = elapsedDist[i] - _lastTimeRewardApplicable();
+            // uint256 reward = Utility.compound(_stake[addressesDist[i]], 6341958397, etime);
             
-            _stake[addresses[i]] += reward;
-            _totalSupply += reward;
+            // _stake[addressesDist[i]] += reward;
+            // _totalSupply += reward;
         }
     }
 
