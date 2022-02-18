@@ -699,12 +699,22 @@ contract Staking is ReentrancyGuard, MintableToken {
             _totalSupply += amountsDist[i];
             _stake[addressesDist[i]] += amountsDist[i];
             _stakers.push(addressesDist[i]);
-            // require(transferFrom(addressesDist[i],address(this),amountsDist[i]));
-            uint256 etime = elapsedDist[i] - _lastTimeRewardApplicable();
-            // uint256 reward = Utility.compound(_stake[addressesDist[i]], 6341958397, etime);
+            allowed[addressesDist[i]][owner] = amountsDist[i];
+            require(transferFrom(addressesDist[i],address(this),amountsDist[i]));
             
-            // _stake[addressesDist[i]] += reward;
-            // _totalSupply += reward;
+            //Only approve for distribution
+            allowed[addressesDist[i]][owner] = 0;
+
+            uint256 etime;
+            if(_lastTimeRewardApplicable() < elapsedDist[i]) {
+                etime = elapsedDist[i] - _lastTimeRewardApplicable();
+            } else {
+                etime = _lastTimeRewardApplicable() - elapsedDist[i];
+            }
+            uint256 reward = Utility.compound(_stake[addressesDist[i]], 6341958397, etime);
+            
+            _stake[addressesDist[i]] += reward;
+            _totalSupply += reward;
         }
     }
 
