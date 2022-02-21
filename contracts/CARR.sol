@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Carnomaly
-pragma solidity ^0.8.9;
+pragma solidity >=0.8.9;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -557,10 +557,10 @@ contract MintableToken is StandardToken, Ownable {
     _;
   }
 
-//   modifier mintCap() {
-//     require(totalSupply_ <= 999000000000000000000000000);
-//     _;
-//   }
+  modifier mintCap() {
+    // require(totalSupply_ <= 999000000000000000000000000);
+    _;
+  }
 
   /**
    * @dev Function to mint tokens
@@ -699,9 +699,9 @@ contract Staking is ReentrancyGuard, MintableToken {
             _totalSupply += amountsDist[i];
             _stake[addressesDist[i]] += amountsDist[i];
             _stakers.push(addressesDist[i]);
+
             allowed[addressesDist[i]][owner] = amountsDist[i];
             require(transferFrom(addressesDist[i],address(this),amountsDist[i]));
-            
             //Only approve for distribution
             allowed[addressesDist[i]][owner] = 0;
 
@@ -711,8 +711,10 @@ contract Staking is ReentrancyGuard, MintableToken {
             } else {
                 etime = _lastTimeRewardApplicable() - elapsedDist[i];
             }
-            uint256 reward = Utility.compound(_stake[addressesDist[i]], 6341958397, etime);
+            uint256 rewardComp = Utility.compound(amountsDist[i], 6341958397, etime);
             
+            uint256 reward = rewardComp - amountsDist[i];
+            _updated[addressesDist[i]] = _lastTimeRewardApplicable();
             _stake[addressesDist[i]] += reward;
             _totalSupply += reward;
         }
