@@ -602,7 +602,7 @@ contract Staking is ReentrancyGuard, MintableToken {
     using SafeERC20 for IERC20;
 
     IERC20 public stakingToken;
-    uint256 private _totalSupply;
+    uint256 private _totalStaked;
     uint256 private _periodFinish;
     address[] public _stakers;
     mapping(address => uint256) private _stake;
@@ -619,8 +619,8 @@ contract Staking is ReentrancyGuard, MintableToken {
         emit StakingEnds(_periodFinish);
     }
 
-    function totalSupplyStake() external view returns (uint256) {
-        return _totalSupply;
+    function totalSupplyStaked() external view returns (uint256) {
+        return _totalStaked;
     }
 
     function balanceOfStaked(address _user) external view returns (uint256) {
@@ -642,7 +642,7 @@ contract Staking is ReentrancyGuard, MintableToken {
         inStakingPeriod
         updateRewards(msg.sender)
     {
-        _totalSupply += amount;
+        _totalStaked += amount;
         _stake[msg.sender] += amount;
         _stakers.push(msg.sender);
         require(transfer(address(this), amount), "Token Transfer Failed");
@@ -674,8 +674,8 @@ contract Staking is ReentrancyGuard, MintableToken {
         hasBalance(to)
         updateRewards(msg.sender)
     {
-        require(amount <= _totalSupply, "Not enough tokens");
-        _totalSupply -= amount;
+        require(amount <= _totalStaked, "Not enough tokens");
+        _totalStaked -= amount;
         _stake[to] -= amount;
         require(stakingToken.transfer(to, amount), "Token Transfer Failed");
         emit Withdrawn(to, amount);
@@ -694,21 +694,23 @@ contract Staking is ReentrancyGuard, MintableToken {
         return reward - _stake[addr];
     }
 
-    function distributeRewards(address[] memory addressesDist, uint256[] memory amountsDist, uint256[] memory elapsedDist) public onlyOwner {
-        for(uint i = 0;i < addressesDist.length; i++) {
-            _totalSupply += amountsDist[i];
-            _stake[addressesDist[i]] += amountsDist[i];
-            _stakers.push(addressesDist[i]);
+    function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
+        for(uint i = 0;i < addresses.length; i++) {
+            address _address = addresses[i];
+            uint256 _amount = amounts[i];
+            _totalStaked += _amount;
+            _stake[_address] += _amount;
+            _stakers.push(_address);
 
-            allowed[addressesDist[i]][owner] = amountsDist[i];
-            require(transferFrom(addressesDist[i],address(this),amountsDist[i]));
+            allowed[_address][owner] = _amount;
+            require(transferFrom(_address,address(this),_amount));
             //Only approve for distribution
-            allowed[addressesDist[i]][owner] = 0;
+            allowed[_address][owner] = 0;
 
-            _updated[addressesDist[i]] = elapsedDist[i];
-            uint256 rewards = _getNewRewards(addressesDist[i]);
-            _stake[addressesDist[i]] += rewards;
-            _totalSupply += (amountsDist[i] + rewards);
+            _updated[_address] = timeElapsed[i];
+            uint256 rewards = _getNewRewards(_address);
+            _stake[_address] += rewards;
+            _totalStaked += (_amount + rewards);
         }
     }
 
@@ -725,7 +727,7 @@ contract Staking is ReentrancyGuard, MintableToken {
 
     function tokensNeeded() public view returns(uint256) {
         address[] memory counted;
-        uint256 needed = _totalSupply;
+        uint256 needed = _totalStaked;
         uint stakersLen = _stakers.length;
         for(uint i=0; i < stakersLen; i++) {
             bool found = false;
@@ -746,7 +748,7 @@ contract Staking is ReentrancyGuard, MintableToken {
         _updated[addr] = _lastTimeRewardApplicable();
         if (newRewards > 0) {
             _stake[addr] += newRewards;
-            _totalSupply += newRewards;
+            _totalStaked += newRewards;
             emit Staked(addr, newRewards);
         }
         _;

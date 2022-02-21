@@ -9,14 +9,6 @@ import "@nomiclabs/hardhat-waffle"
 // For more information go to the hardhat guide
 // https://hardhat.org/hardhat-network/
 // https://hardhat.org/guides/mainnet-forking.html
-const FORK_FUJI = true
-const FORK_MAINNET = false
-const forkingData = FORK_FUJI ? {
-  url: 'https://api.avax-test.network/ext/bc/C/rpc',
-} : FORK_MAINNET ? {
-  url: 'https://api.avax.network/ext/bc/C/rpc',
-} : undefined
-
 task("accounts", "Prints the list of accounts", async (args, hre): Promise<void> => {
   const accounts: SignerWithAddress[] = await hre.ethers.getSigners()
   accounts.forEach((account: SignerWithAddress): void => {
@@ -38,21 +30,21 @@ export default {
   solidity: {
     compilers: [
       {
-        version: "0.4.23"
+        version: "0.8.0"
       },
       {
         version: "0.8.9"
-      }
+      },
     ]
   },
   networks: {
     hardhat: {
-      gasPrice: 225000000000,
-      chainId: 43113, //Only specify a chainId if we are not forking
-      forking: forkingData
     },
-    local: {
-      url: "http://localhost:13755/ext/bc/C/rpc",
+    localhost: {
+      url: "http://127.0.0.1:8545"
+    },
+    localAvax: {
+      url: "http://localhost:37870/ext/bc/C/rpc",
       gasPrice: 225000000000,
       chainId: 43112,
       accounts: [
