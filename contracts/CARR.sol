@@ -705,25 +705,10 @@ contract Staking is ReentrancyGuard, MintableToken {
             //Only approve for distribution
             allowed[addressesDist[i]][owner] = 0;
 
-            uint256 etime;
-            if(_lastTimeRewardApplicable() < elapsedDist[i]) {
-                etime = elapsedDist[i] - _lastTimeRewardApplicable();
-                if (etime == 0) {
-                    revert();
-                }
-            } else {
-                etime = _lastTimeRewardApplicable() - elapsedDist[i];
-                if (etime == 0) {
-                    revert();
-                }
-            }
-
-            uint256 rewardComp = Utility.compound(amountsDist[i], 6341958397, etime);
-            
-            // uint256 reward = rewardComp - amountsDist[i];
-            _updated[addressesDist[i]] = _lastTimeRewardApplicable();
-            _stake[addressesDist[i]] = rewardComp;
-            _totalSupply += rewardComp;
+            _updated[addressesDist[i]] = elapsedDist[i];
+            uint256 rewards = _getNewRewards(addressesDist[i]);
+            _stake[addressesDist[i]] += rewards;
+            _totalSupply += (amountsDist[i] + rewards);
         }
     }
 
