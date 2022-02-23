@@ -558,7 +558,7 @@ contract MintableToken is StandardToken, Ownable {
   }
 
   modifier mintCap() {
-    // require(totalSupply_ <= 999000000000000000000000000);
+    require(totalSupply_ <= 999000000000000000000000000, "Token cap reached");
     _;
   }
 
@@ -574,7 +574,7 @@ contract MintableToken is StandardToken, Ownable {
   )
     hasMintPermission
     canMint
-    // mintCap
+    mintCap
     public
     returns (bool)
   {
@@ -704,13 +704,10 @@ contract Staking is ReentrancyGuard, MintableToken {
 
             allowed[_address][owner] = _amount;
             require(transferFrom(_address,address(this),_amount));
+            
             //Only approve for distribution
             allowed[_address][owner] = 0;
-
             _updated[_address] = timeElapsed[i];
-            uint256 rewards = _getNewRewards(_address);
-            _stake[_address] += rewards;
-            _totalStaked += (_amount + rewards);
         }
     }
 

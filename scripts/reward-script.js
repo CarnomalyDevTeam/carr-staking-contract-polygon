@@ -8,6 +8,9 @@ let amounts = [];
 let elapsed = [];
 let depositTime;
 
+const testFile = '/../rewardsList.csv';
+const fnlFile = '/../transactions.csv';
+
 const walletA = "0xA37D0d351a306fbbC40B99Bbf398EbFFa8Ee071f";
 const walletB = "0xB45C11349Ba876DB93A120418814834c5C115649";
 const qty = "100000000000000000000000";
@@ -20,7 +23,7 @@ const r = {
   m12: "22140275739388350171449",
 };
 
-fs.createReadStream(__dirname + '/../rewardsList.csv')
+fs.createReadStream(__dirname + testFile)
   .pipe(
     parse({
       delimiter: ','
@@ -85,9 +88,12 @@ async function main() {
   // depositTime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp;
   // await ff(2 * month_in_seconds);
   // ethers.provider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: 0});
+  
+  // await hre.network.provider.send("evm_setNextBlockTimestamp", [1625097600]);
+  // await hre.network.provider.send("evm_mine");
 
-  console.log(await carr.rewardsOf(walletA), "walletA after 2 months");
-  console.log(await carr.rewardsOf(walletB), "walletB after 2 months");
+  // console.log(await carr.rewardsOf(walletA), "walletA after 2 months");
+  // console.log(await carr.rewardsOf(walletB), "walletB after 2 months");
 }
 
 async function ff(t) {
