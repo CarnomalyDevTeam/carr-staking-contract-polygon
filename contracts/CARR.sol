@@ -694,6 +694,10 @@ contract Staking is ReentrancyGuard, MintableToken {
         return reward - _stake[addr];
     }
 
+    // _getDistRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
+
+    // }
+
     function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
         for(uint i = 0;i < addresses.length; i++) {
             address _address = addresses[i];
