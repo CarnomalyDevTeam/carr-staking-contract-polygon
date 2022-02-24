@@ -10,7 +10,7 @@ describe('Carnomaly', function () {
     m12: "33210",
   };
   let depositTime;
-  let unfreezeDate = 1645040974; // 2-16-2022
+  let unfreezeDate = 1645040974; // 2-16-2022, fake deadline
 
   before(async function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
