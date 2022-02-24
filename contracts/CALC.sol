@@ -5,10 +5,12 @@ pragma solidity >=0.8.9;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "hardhat/console.sol";
 
-contract CALC {
+contract Calc {
   using SafeMath for uint256;
-  function placeholderCalc(address _addr) public {
-
+  function placeholderCalc(uint256 _timestamp, uint256 _amount) public view returns (uint256) {
+    uint256 etime = block.timestamp - _timestamp;
+    uint256 reward = Utility.compound(_amount, 6341958397, etime);
+    return reward;
   }
 }
 
