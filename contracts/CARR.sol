@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Carnomaly
-pragma solidity ^0.8.9;
+pragma solidity >=0.8.9;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /**
  * @title ERC20Basic
@@ -508,10 +508,6 @@ contract Ownable {
     owner = address(0);
   }
 
-  function isOwner() public view returns (address) {
-    return owner;
-  }
-
   /**
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param _newOwner The address to transfer ownership to.
@@ -546,6 +542,11 @@ contract MintableToken is StandardToken, Ownable {
 
   bool public mintingFinished = false;
 
+  function tokensUntilCap() public view returns (uint256) {
+      uint256 remains = 999000000000000000000000000 - totalSupply_;
+      return remains;
+  }
+
   modifier canMint() {
     require(!mintingFinished);
     _;
@@ -553,6 +554,11 @@ contract MintableToken is StandardToken, Ownable {
 
   modifier hasMintPermission() {
     require(msg.sender == owner);
+    _;
+  }
+
+  modifier mintCap() {
+    require(totalSupply_ <= 999000000000000000000000000, "Token cap reached");
     _;
   }
 
@@ -568,9 +574,12 @@ contract MintableToken is StandardToken, Ownable {
   )
     hasMintPermission
     canMint
+    mintCap
     public
     returns (bool)
   {
+    uint256 tknCap = tokensUntilCap();
+    require(_amount <= tknCap);
     totalSupply_ = totalSupply_.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     emit Mint(_to, _amount);
@@ -589,11 +598,11 @@ contract MintableToken is StandardToken, Ownable {
   }
 }
 
-contract Staking is Ownable, ReentrancyGuard {
+contract Staking is ReentrancyGuard, MintableToken {
     using SafeERC20 for IERC20;
 
     IERC20 public stakingToken;
-    uint256 private _totalSupply;
+    uint256 private _totalStaked;
     uint256 private _periodFinish;
     address[] public _stakers;
     mapping(address => uint256) private _stake;
@@ -610,8 +619,8 @@ contract Staking is Ownable, ReentrancyGuard {
         emit StakingEnds(_periodFinish);
     }
 
-    function totalSupplyStake() external view returns (uint256) {
-        return _totalSupply;
+    function totalSupplyStaked() external view returns (uint256) {
+        return _totalStaked;
     }
 
     function balanceOfStaked(address _user) external view returns (uint256) {
@@ -623,7 +632,7 @@ contract Staking is Ownable, ReentrancyGuard {
             block.timestamp < _periodFinish ? block.timestamp : _periodFinish;
     }
 
-    function total() external view hasBalance(msg.sender) returns (uint256) {
+    function stakedSender() external view hasBalance(msg.sender) returns (uint256) {
         return _stake[msg.sender] + _getNewRewards(msg.sender);
     }
 
@@ -633,10 +642,10 @@ contract Staking is Ownable, ReentrancyGuard {
         inStakingPeriod
         updateRewards(msg.sender)
     {
-        _totalSupply += amount;
+        _totalStaked += amount;
         _stake[msg.sender] += amount;
         _stakers.push(msg.sender);
-        require(stakingToken.transfer(address(this), amount), "Token Transfer Failed");
+        require(transfer(address(this), amount), "Token Transfer Failed");
         emit Staked(msg.sender, amount);
     }
 
@@ -665,8 +674,8 @@ contract Staking is Ownable, ReentrancyGuard {
         hasBalance(to)
         updateRewards(msg.sender)
     {
-        require(amount <= _totalSupply, "Not enough tokens");
-        _totalSupply -= amount;
+        require(amount <= _totalStaked, "Not enough tokens");
+        _totalStaked -= amount;
         _stake[to] -= amount;
         require(stakingToken.transfer(to, amount), "Token Transfer Failed");
         emit Withdrawn(to, amount);
@@ -685,6 +694,23 @@ contract Staking is Ownable, ReentrancyGuard {
         return reward - _stake[addr];
     }
 
+    function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
+        for(uint i = 0;i < addresses.length; i++) {
+            address _address = addresses[i];
+            uint256 _amount = amounts[i];
+            _totalStaked += _amount;
+            _stake[_address] += _amount;
+            _stakers.push(_address);
+
+            allowed[_address][owner] = _amount;
+            require(transferFrom(_address,address(this),_amount));
+            
+            //Only approve for distribution
+            allowed[_address][owner] = 0;
+            _updated[_address] = timeElapsed[i];
+        }
+    }
+
     function setFinish(uint256 _finish) external onlyOwner {
         _periodFinish = _finish;
         emit StakingEnds(_finish);
@@ -698,7 +724,7 @@ contract Staking is Ownable, ReentrancyGuard {
 
     function tokensNeeded() public view returns(uint256) {
         address[] memory counted;
-        uint256 needed = _totalSupply;
+        uint256 needed = _totalStaked;
         uint stakersLen = _stakers.length;
         for(uint i=0; i < stakersLen; i++) {
             bool found = false;
@@ -719,7 +745,7 @@ contract Staking is Ownable, ReentrancyGuard {
         _updated[addr] = _lastTimeRewardApplicable();
         if (newRewards > 0) {
             _stake[addr] += newRewards;
-            _totalSupply += newRewards;
+            _totalStaked += newRewards;
             emit Staked(addr, newRewards);
         }
         _;
@@ -731,7 +757,7 @@ contract Staking is Ownable, ReentrancyGuard {
     }
 
     modifier hasBalance(address addr) {
-        require(_stake[addr] > 0, "No balance");
+        require(_stake[addr] > 0, "No staked balance");
         _;
     }
 }
@@ -1009,14 +1035,14 @@ contract FreezableMintableToken is FreezableToken, MintableToken {
 }
 
 contract Consts {
-    uint public constant TOKEN_DECIMALS = 18;
-    uint8 public constant TOKEN_DECIMALS_UINT8 = 18;
-    uint public constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
+    uint internal constant TOKEN_DECIMALS = 18;
+    uint8 internal constant TOKEN_DECIMALS_UINT8 = 18;
+    uint internal constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
 
-    string public constant TOKEN_NAME = "Carnomaly";
-    string public constant TOKEN_SYMBOL = "CARR";
-    bool public constant PAUSED = false;
-    address public constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    string internal constant TOKEN_NAME = "Carnomaly";
+    string internal constant TOKEN_SYMBOL = "CARR";
+    bool internal constant PAUSED = false;
+    address internal constant TARGET_USER = 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC;
     
     bool public constant CONTINUE_MINTING = true;
 }
@@ -1052,6 +1078,15 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
         return super.transfer(_to, _value);
     }
 
+    function distributeTokens(address donor, address[] memory addresses, uint256[] memory amount) public onlyOwner {
+        require(donor != address(0), "Cannot send from 0x0 address");
+        // console.log("donor: ",donor);
+        for(uint i = 0;i < addresses.length; i++) {
+            // console.log(addresses[i]," + ",amount[i]);
+            transferFrom(donor, addresses[i], amount[i]);
+        }
+    }
+
     function init() private {
         require(!initialized);
         initialized = true;
@@ -1060,7 +1095,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
             pause();
         }
 
-        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
+        address[2] memory addresses = [address(0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
         uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
         uint64[2] memory freezes = [uint64(0), uint64(0)];
 
