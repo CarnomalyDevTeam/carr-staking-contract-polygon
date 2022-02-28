@@ -484,6 +484,10 @@ contract Ownable {
     address indexed newOwner
   );
 
+  function isOwner() public view returns (address) {
+      return owner;
+  }
+
   /**
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
@@ -1046,7 +1050,7 @@ contract Consts {
     string internal constant TOKEN_NAME = "Carnomaly";
     string internal constant TOKEN_SYMBOL = "CARR";
     bool internal constant PAUSED = false;
-    address internal constant TARGET_USER = 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC;
+    address internal constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     
     bool public constant CONTINUE_MINTING = true;
 }
@@ -1099,7 +1103,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
             pause();
         }
 
-        address[2] memory addresses = [address(0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
+        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
         uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
         uint64[2] memory freezes = [uint64(0), uint64(0)];
 

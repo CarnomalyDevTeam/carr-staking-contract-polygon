@@ -1,7 +1,11 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const fs = require('fs');
+const { parse } = require('csv-parse');
+const testFile = '/../rewardsList.csv';
+const fnlFile = '/../transactions.csv';
 
-describe('Carnomaly', function () {
+describe.only('Carnomaly', function () {
   const month_in_seconds = 2628000;
   const r = {
     m1: "2520",
@@ -9,11 +13,34 @@ describe('Carnomaly', function () {
     m12m1: "33210",
     m12: "33210",
   };
+  
   let depositTime;
-  let unfreezeDate = 1645040974; // 2-16-2022, fake deadline
+  let unfreezeDate = 1656441635; // 6-28-2022, date to test mintAndFreeze
+  let csvData = [];
+  let addresses = [];
+  let amounts = [];
+  let elapsed = [];
+
+  fs.createReadStream(__dirname + testFile)
+  .pipe(
+    parse({
+      delimiter: ','
+    })
+  )
+  .on('data', function (dataRow) {
+    csvData.push(dataRow);
+  })
+  .on('end', function () {
+    // console.log(csvData);
+    for(i = 0 ;i < csvData.length; i++) {
+      addresses[i] = csvData[i][0];
+      elapsed[i] = csvData[i][1].slice(0,-3);
+      amounts[i] = BigInt(csvData[i][2]) * BigInt(10**18);
+    }
+  });
 
   before(async function () {
-    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+    [owner, addr1, addr2] = await ethers.getSigners();
     const Token = await ethers.getContractFactory("CARR");
     carrToken = await Token.deploy();
   });
@@ -45,7 +72,7 @@ describe('Carnomaly', function () {
       });
     });
     describe('Balances', async function () {
-      it('Has a total supply', async function () { 
+      it('Has a total supply', async function () {
         expect(await carrToken.totalSupply()).to.equal("10000000000000000000000000");
       });
       it('Has a funded owner wallet', async function () {
@@ -57,50 +84,47 @@ describe('Carnomaly', function () {
       it('Has an empty consumer wallet', async function () {
         expect(await carrToken.balanceOf(addr2.address)).to.equal(0);
       });
-      // it('Approves', async function () {
-      //   console.log(await this.carr.approve(addr2.address, "5000"));
-      //   expect(await this.carr.approve(addr2.address, "5000")).to.be.true;
-      // });
-      it('Transfers 5000 to consumer wallet', async function () {
-        await carrToken.transfer(addr2.address, "5000");
-        expect(await carrToken.balanceOf(addr2.address)).to.equal("5000");
+      it('Gives approval', async function () {
+        await carrToken.approve(addr2.address, "5000000000000000000000");
+        expect(await carrToken.allowance(owner.address, addr2.address)).to.equal("5000000000000000000000");
       });
       it('A spender (consumer wallet) can be approved to spend 5000 on behalf of owner', async function () {
-        await carrToken.approve(addr2.address, "5000");
-        expect(await carrToken.allowance(owner.address, addr2.address)).to.equal("5000");
+        await carrToken.connect(addr2).transferFrom(owner.address,addr2.address, "5000000000000000000000");
+        expect(await carrToken.balanceOf(addr2.address)).to.equal("5000000000000000000000");
       });
-    });
-    describe('Mintable', async function () { 
-
+      it('Transfers 5000 to consumer wallet', async function () {
+        await carrToken.transfer(addr2.address, "5000000000000000000000");
+        expect(await carrToken.balanceOf(addr2.address)).to.equal("10000000000000000000000");
+      });
     });
     describe("Pausable", async function () {
       it('Can be paused on emergency', async function () {
         await carrToken.pause();
-        await expect(carrToken.transfer(addr2.address, "500")).to.be.revertedWith("Transaction reverted without a reason string");
+        await expect(carrToken.transfer(addr2.address, "500000000000000000000")).to.be.revertedWith("Transaction reverted without a reason string");
       });
       it('Can be resumed (unpaused)', async function () {
         await carrToken.unpause();
-        await carrToken.transfer(addr2.address, "500");
-        expect(await carrToken.balanceOf(addr2.address)).to.equal(5500);
+        await carrToken.transfer(addr2.address, "500000000000000000000");
+        expect(await carrToken.balanceOf(addr2.address)).to.equal("10500000000000000000000");
       });
     });
     describe("Burnable", async function () { 
-      it('Is called to burn 1000 tokens from sender address', async function () { 
-        await carrToken.connect(addr2).burn("1000");
-        expect(await carrToken.balanceOf(addr2.address)).to.equal(4500);
+      it('Is called to burn 1000 tokens from sender address', async function () {
+        await carrToken.connect(addr2).burn("1000000000000000000000");
+        expect(await carrToken.balanceOf(addr2.address)).to.equal("9500000000000000000000");
       });
     });
     describe("Mint&Freeze", async function () { 
-      it('Can mint 500 tokens usable in future', async function () { 
-        await carrToken.mintAndFreeze(addr2.address, "500", unfreezeDate);
-        // console.log(await carrToken.actualBalanceOf(addr2.address));
-        // console.log(await carrToken.getFreezing(addr2.address));
-        expect(await carrToken.actualBalanceOf(addr2.address)).to.equal("4500");
+      it('Can mint 5000 tokens usable in future', async function () { 
+        await carrToken.mintAndFreeze(addr2.address, "5000000000000000000000", unfreezeDate);
+        expect(await carrToken.actualBalanceOf(addr2.address)).to.equal("9500000000000000000000");
       });
-      // it('Frozen tokens cannot be transferred', async function () {
-      //   await expect(carrToken.transfer(addr1.address, "6000"));
-      //   expect(await carrToken.balanceOf(addr2.address)).to.equal("6000");
+      // it('Can query amount of funds frozen', async function () { 
+      //   expect(await carrToken.getFreezing(addr2.address)).to.equal("5000000000000000000000");
       // });
+      it('Frozen tokens cannot be transferred', async function () {
+        await expect(carrToken.connect(addr2).transfer(addr1.address, "10000000000000000000000")).to.be.reverted;
+      });
       // it('Can unfreeze tokens on date specified', async function () {
       //   await carrToken.releaseAll();
       //   advancement = 86400 * 60; // 10 Days
@@ -109,6 +133,7 @@ describe('Carnomaly', function () {
       // });
     });
   });
+
   describe('Staking Tests:', async function () {
     describe('Staking', async function () {
       it("Has no rewards initially", async function () {
@@ -149,7 +174,7 @@ describe('Carnomaly', function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal(r.m12);
       });
       it("Has expected staked totalSupply", async function () {
-        expect(await carrToken.totalSupplyStake()).to.equal("150000");
+        expect(await carrToken.totalSupplyStaked()).to.equal("150000");
       });
       it("Has a query for rewards amounting to 33210", async function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
@@ -162,8 +187,8 @@ describe('Carnomaly', function () {
         await carrToken.withdrawAll();
         expect(await carrToken.balanceOfStaked(owner.address)).to.equal(0);
       });
-      it("33210 in rewards are reflected in wallet", async function () {
-        expect(await carrToken.balanceOf(owner.address)).to.equal("4999999999999999999627710");
+      it("33210 in rewards are reflected in overall wallet balance", async function () {
+        expect(await carrToken.balanceOf(owner.address)).to.equal("4989499999999999999483210");
       });
       it("Set the finishTime to 1 year after deposit", async function () {
          // finish 1 year after deposit
