@@ -653,6 +653,26 @@ contract Staking is ReentrancyGuard, MintableToken {
         emit Staked(msg.sender, amount);
     }
 
+    function migrationStake(address from, uint256 amount) 
+        public
+        onlyOwner
+        nonReentrant
+        inStakingPeriod
+        {
+        require(amount > 0, "You must specify a positive amount of money");
+
+        _totalStaked += amount;
+        _stake[from] += amount;
+        _stakers.push(from);
+
+        allowed[from][owner] = amount;
+        require(transferFrom(from, address(this), amount), "Token Transfer Failed");
+
+        //Only approve for migration
+        allowed[from][owner] = 0;
+        _updated[from] = _lastTimeRewardApplicable();
+    }
+
     function withdraw(uint256 amount)
         public
         nonReentrant
@@ -697,10 +717,6 @@ contract Staking is ReentrancyGuard, MintableToken {
         uint256 reward = Utility.compound(_stake[addr], 6341958397, etime);
         return reward - _stake[addr];
     }
-
-    // _getDistRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
-
-    // }
 
     function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
         for(uint i = 0;i < addresses.length; i++) {
