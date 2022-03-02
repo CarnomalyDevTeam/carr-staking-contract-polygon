@@ -21,11 +21,11 @@ describe.only('Carnomaly', function () {
   let amounts = [140000000000000000000000n,43000000000000000000000n];
   let elapsed = [1644535431,1633036252];
   let manualStake = [
-    ["0xBcd4042DE499D14e55001CcbB24a551F3b954096", "100000000000000000000000"],
-    ["0x71bE63f3384f5fb98995898A86B02Fb2426c5788", "44000000000000000000000"],
-    ["0xFABB0ac9d68B0B445fB7357272Ff202C5651694a", "23000000000000000000000"],
-    ["0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec", "440000000000000000000000"],
-    ["0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097", "840000000000000000000000"]
+    ["0xBcd4042DE499D14e55001CcbB24a551F3b954096","10000000000000000000000"],
+    ["0x71bE63f3384f5fb98995898A86B02Fb2426c5788","44000000000000000000000"],
+    ["0xFABB0ac9d68B0B445fB7357272Ff202C5651694a","23000000000000000000000"],
+    ["0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec","440000000000000000000000"],
+    ["0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097","840000000000000000000000"]
   ]
 
   before(async function () {
@@ -175,29 +175,22 @@ describe.only('Carnomaly', function () {
       it("Accepts a pre-calculated stake amount transaction from Owner", async function () {
         //fund test wallets so they can stake
         await carrToken.transfer("0xBcd4042DE499D14e55001CcbB24a551F3b954096", "10000000000000000000000");
-        await console.log(await carrToken.balanceOf("0xBcd4042DE499D14e55001CcbB24a551F3b954096"));
-
         await carrToken.transfer("0x71bE63f3384f5fb98995898A86B02Fb2426c5788", "44000000000000000000000");
-        await console.log(await carrToken.balanceOf("0x71bE63f3384f5fb98995898A86B02Fb2426c5788"));
-
         await carrToken.transfer("0xFABB0ac9d68B0B445fB7357272Ff202C5651694a", "23000000000000000000000");
-        await console.log(await carrToken.balanceOf("0xFABB0ac9d68B0B445fB7357272Ff202C5651694a"));
-
         await carrToken.transfer("0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec", "440000000000000000000000");
-        await console.log(await carrToken.balanceOf("0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec"));
-
         await carrToken.transfer("0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097", "840000000000000000000000");
-        await console.log(await carrToken.balanceOf("0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097"));
 
-        await carrToken.migrationStake("0xBcd4042DE499D14e55001CcbB24a551F3b954096", "10000000000000000000000");
-
-        // await carrToken.migrationStake(manualStake[0][0], manualStake[0][1]);
-        // await carrToken.migrationStake(manualStake[1][0], manualStake[1][1]);
-        // await carrToken.migrationStake(manualStake[2][0], manualStake[2][1]);
-        // await carrToken.migrationStake(manualStake[3][0], manualStake[3][1]);
-        // await carrToken.migrationStake(manualStake[4][0], manualStake[4][1]);
+        await carrToken.migrationStake(manualStake[0][0], manualStake[0][1]);
+        await carrToken.migrationStake(manualStake[1][0], manualStake[1][1]);
+        await carrToken.migrationStake(manualStake[2][0], manualStake[2][1]);
+        await carrToken.migrationStake(manualStake[3][0], manualStake[3][1]);
+        await carrToken.migrationStake(manualStake[4][0], manualStake[4][1]);
 
         expect(await carrToken.balanceOfStaked("0xBcd4042DE499D14e55001CcbB24a551F3b954096")).to.equal("10000000000000000000000");
+        expect(await carrToken.balanceOfStaked("0x71bE63f3384f5fb98995898A86B02Fb2426c5788")).to.equal("44000000000000000000000");
+        expect(await carrToken.balanceOfStaked("0xFABB0ac9d68B0B445fB7357272Ff202C5651694a")).to.equal("23000000000000000000000");
+        expect(await carrToken.balanceOfStaked("0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec")).to.equal("440000000000000000000000");
+        expect(await carrToken.balanceOfStaked("0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097")).to.equal("840000000000000000000000");
       });
       it("Verifies interest after 1 month", async function () {
         await ff(month_in_seconds);
@@ -216,7 +209,7 @@ describe.only('Carnomaly', function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal(r.m12);
       });
       it("Has expected staked totalSupply", async function () {
-        expect(await carrToken.totalSupplyStaked()).to.equal("193000000000000000150000");
+        expect(await carrToken.totalSupplyStaked()).to.equal("1540000000000000000150000");
       });
       it("Has a query for rewards amounting to 33210", async function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
