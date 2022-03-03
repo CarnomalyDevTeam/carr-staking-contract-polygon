@@ -5,7 +5,6 @@ pragma solidity >=0.8.9;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-// import "hardhat/console.sol";
 
 /**
  * @title ERC20Basic
@@ -24,18 +23,9 @@ abstract contract ERC20Basic {
  * @dev see https://github.com/ethereum/EIPs/issues/20
  */
 abstract contract ERC20 is ERC20Basic {
-  function allowance(address owner, address spender)
-    public virtual returns (uint256);
-
-  //   function transferFrom(address from, address to, uint256 value)
-  //     public virtual returns (bool);
-
+  function allowance(address owner, address spender) public virtual returns (uint256);
   function approve(address spender, uint256 value) public virtual returns (bool);
-  event Approval(
-    address indexed owner,
-    address indexed spender,
-    uint256 value
-  );
+  event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
 /**
@@ -316,17 +306,17 @@ abstract contract BasicToken is ERC20Basic {
   uint256 totalSupply_;
 
   /**
-  * @dev total number of tokens in existence
-  */
+   * @dev total number of tokens in existence.
+   */
   function totalSupply() public view override returns (uint256) {
     return totalSupply_;
   }
 
   /**
-  * @dev transfer token for a specified address
-  * @param _to The address to transfer to.
-  * @param _value The amount to be transferred.
-  */
+   * @dev transfer token for a specified address
+   * @param _to The address to transfer to.
+   * @param _value The amount to be transferred.
+   */
   function transfer(address _to, uint256 _value) public override returns (bool) {
     require(_to != address(0));
     require(_value <= balances[msg.sender]);
@@ -338,10 +328,10 @@ abstract contract BasicToken is ERC20Basic {
   }
 
   /**
-  * @dev Gets the balance of the specified address.
-  * @param _owner The address to query the the balance of.
-  * @return An uint256 representing the amount owned by the passed address.
-  */
+   * @dev Gets the balance of the specified address.
+   * @param _owner The address to query the the balance of.
+   * @return An uint256 representing the amount owned by the passed address.
+   */
   function balanceOf(address _owner) public view override returns (uint256) {
     return balances[_owner];
   }
@@ -360,10 +350,10 @@ contract StandardToken is ERC20, BasicToken {
   mapping (address => mapping (address => uint256)) internal allowed;
 
   /**
-   * @dev Transfer tokens from one address to another
-   * @param _from address The address which you want to send tokens from
-   * @param _to address The address which you want to transfer to
-   * @param _value uint256 the amount of tokens to be transferred
+   * @dev Transfer tokens from one address to another.
+   * @param _from address The address which you want to send tokens from.
+   * @param _to address The address which you want to transfer to.
+   * @param _value uint256 the amount of tokens to be transferred.
    */
   function transferFrom(
     address _from,
@@ -479,18 +469,10 @@ contract Ownable {
   address public owner;
 
   event OwnershipRenounced(address indexed previousOwner);
-  event OwnershipTransferred(
-    address indexed previousOwner,
-    address indexed newOwner
-  );
-
-  function isOwner() public view returns (address) {
-      return owner;
-  }
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
   /**
-   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-   * account.
+   * @dev The Ownable constructor sets the original `owner` of the contract to the sender account.
    */
   constructor() {
     owner = msg.sender;
@@ -502,6 +484,14 @@ contract Ownable {
   modifier onlyOwner() {
     require(msg.sender == owner);
     _;
+  }
+
+  /**
+   * @dev Function that gets the contract owner address.
+   * @return address of owner.
+   */
+  function isOwner() public view returns (address) {
+      return owner;
   }
 
   /**
@@ -546,24 +536,37 @@ contract MintableToken is StandardToken, Ownable {
 
   bool public mintingFinished = false;
 
-  function tokensUntilCap() public view returns (uint256) {
-      uint256 remains = 999000000000000000000000000 - totalSupply_;
-      return remains;
-  }
-
+  /**
+   * @dev Function to check if miniting is possible.
+   */
   modifier canMint() {
     require(!mintingFinished);
     _;
   }
 
+  /**
+   * @dev Function used to check if sender address has permission to mint tokens.
+   */
   modifier hasMintPermission() {
     require(msg.sender == owner);
     _;
   }
 
+  /**
+   * @dev Function to check if token cap has been reached.
+   */
   modifier mintCap() {
     require(totalSupply_ <= 999000000000000000000000000, "Token cap reached");
     _;
+  }
+
+  /**
+   * @dev Get the amount of tokens availible until cap.
+   * @return number representing remaining amount.
+   */
+  function tokensUntilCap() public view returns (uint256) {
+      uint256 remains = 999000000000000000000000000 - totalSupply_;
+      return remains;
   }
 
   /**
@@ -602,6 +605,10 @@ contract MintableToken is StandardToken, Ownable {
   }
 }
 
+/**
+ * @title Staking
+ * @dev Contract that enables staking functionality.
+ */
 contract Staking is ReentrancyGuard, MintableToken {
     using SafeERC20 for IERC20;
 
@@ -623,23 +630,76 @@ contract Staking is ReentrancyGuard, MintableToken {
         emit StakingEnds(_periodFinish);
     }
 
+    /**
+     * @dev Function utility for timestamps and rewards calculations/tracking.
+     * @param addr address of staking wallet.
+     */
+    modifier updateRewards(address addr) {
+        uint256 newRewards = _getNewRewards(addr);
+        _updated[addr] = _lastTimeRewardApplicable();
+        if (newRewards > 0) {
+            _stake[addr] += newRewards;
+            _totalStaked += newRewards;
+            emit Staked(addr, newRewards);
+        }
+        _;
+    }
+
+   /**
+    * @dev Function used to check if activity is within the contract's staking period.
+    */
+    modifier inStakingPeriod() {
+        require(block.timestamp <= _periodFinish, "Staking period has ended");
+        _;
+    }
+
+   /**
+    * @dev Function to check if an address has tokens.
+    * @param addr address of staking wallet.
+    */
+    modifier hasBalance(address addr) {
+        require(_stake[addr] > 0, "No staked balance");
+        _;
+    }
+
+   /**
+    * @dev Function to get total count of staked tokens.
+    * @return number for amount of total staked within contract.
+    */
     function totalSupplyStaked() external view returns (uint256) {
         return _totalStaked;
     }
 
+   /**
+    * @dev Function to get balance staked of specified address.
+    * @param _user The address specified.
+    * @return A number for the address' staked amount.
+    */
     function balanceOfStaked(address _user) external view returns (uint256) {
         return _stake[_user];
     }
 
+   /**
+    * @dev Function to get block time unless the staking period is over.
+    * @return A number/epoch representing time or the _periodFinish value.
+    */
     function _lastTimeRewardApplicable() internal view returns (uint256) {
         return
             block.timestamp < _periodFinish ? block.timestamp : _periodFinish;
     }
 
+   /**
+    * @dev Function to get cumulative stake amount.
+    * @return A number for total stake with rewards included.
+    */
     function stakedSender() external view hasBalance(msg.sender) returns (uint256) {
         return _stake[msg.sender] + _getNewRewards(msg.sender);
     }
 
+    /**
+     * @dev Function to stake desired amount of tokens.
+     * @param amount number of tokens desired to stake.
+     */
     function stake(uint256 amount)
         external
         nonReentrant
@@ -653,6 +713,11 @@ contract Staking is ReentrancyGuard, MintableToken {
         emit Staked(msg.sender, amount);
     }
 
+    /**
+     * @dev Function to stake tokens on another's behalf, usable by owner.
+     * @param from address from where the tokens are being staked from.
+     * @param amount number of tokens to be staked.
+     */
     function migrationStake(address from, uint256 amount) 
         public
         onlyOwner
@@ -673,6 +738,10 @@ contract Staking is ReentrancyGuard, MintableToken {
         _updated[from] = _lastTimeRewardApplicable();
     }
 
+    /**
+     * @dev Function to take out specifiec amount staked.
+     * @param amount amount of tokens to withdraw.
+     */
     function withdraw(uint256 amount)
         public
         nonReentrant
@@ -684,6 +753,9 @@ contract Staking is ReentrancyGuard, MintableToken {
         _withdraw(msg.sender, amount);
     }
 
+    /**
+     * @dev Function to take out amount staked.
+     */
     function withdrawAll()
         public
         nonReentrant
@@ -693,6 +765,11 @@ contract Staking is ReentrancyGuard, MintableToken {
         _withdraw(msg.sender, _stake[msg.sender]);
     }
 
+    /**
+     * @dev Function to take out specifiec amount staked.
+     * @param to address the staked tokens are sent to.
+     * @param amount the amount of staked tokens taken out.
+     */
     function _withdraw(address to, uint256 amount)
         private
         hasBalance(to)
@@ -705,10 +782,20 @@ contract Staking is ReentrancyGuard, MintableToken {
         emit Withdrawn(to, amount);
     }
 
+    /**
+     * @dev Function to to check staking rewards of specified address.
+     * @param addr address of specified wallet.
+     * @return number representing the stake reward.
+     */
     function rewardsOf(address addr) public view returns (uint256) {
         return _getNewRewards(addr);
     }
 
+    /**
+     * @dev Function to check staking rewards of specified address.
+     * @param addr address of specified wallet.
+     * @return number representing the stake reward.
+     */
     function _getNewRewards(address addr) private view returns (uint256) {
         uint256 etime = _lastTimeRewardApplicable() - _updated[addr];
         if (etime == 0 || _stake[addr] == 0) {
@@ -718,6 +805,12 @@ contract Staking is ReentrancyGuard, MintableToken {
         return reward - _stake[addr];
     }
 
+    /**
+     * @dev Function that distributes/calculates staking rewards based on vector inputs.
+     * @param addresses array/list of addresses.
+     * @param amounts array/list of corresponding staking amounts.
+     * @param timeElapsed array/list of epoch timestamps use for rewards calculation.
+     */
     function distributeRewards(address[] memory addresses, uint256[] memory amounts, uint256[] memory timeElapsed) public onlyOwner {
         for(uint i = 0;i < addresses.length; i++) {
             address _address = addresses[i];
@@ -735,17 +828,29 @@ contract Staking is ReentrancyGuard, MintableToken {
         }
     }
 
+    /**
+     * @dev Function that sets the last day for staking.
+     * @param _finish number/epoch used to set finishing time.
+     */
     function setFinish(uint256 _finish) external onlyOwner {
         _periodFinish = _finish;
         emit StakingEnds(_finish);
     }
 
+    /**
+     * @dev Function to recover tokens.
+     * @param amt amount to be recovered.
+     */
     function recoverERC20(uint256 amt) public onlyOwner {
         IERC20 theToken = IERC20(address(this));
         require(theToken.transfer(msg.sender, amt), "Token Transfer Failed");
         emit Recovered(address(this), amt);
     }
 
+    /**
+     * @dev Function that gets the amount of tokens needed.
+     * @return number representing token amount.
+     */
     function tokensNeeded() public view returns(uint256) {
         address[] memory counted;
         uint256 needed = _totalStaked;
@@ -762,27 +867,6 @@ contract Staking is ReentrancyGuard, MintableToken {
             needed += _stake[_stakers[i]] + rewardsOf(_stakers[i]);
         }
         return needed;
-    }
-
-    modifier updateRewards(address addr) {
-        uint256 newRewards = _getNewRewards(addr);
-        _updated[addr] = _lastTimeRewardApplicable();
-        if (newRewards > 0) {
-            _stake[addr] += newRewards;
-            _totalStaked += newRewards;
-            emit Staked(addr, newRewards);
-        }
-        _;
-    }
-
-    modifier inStakingPeriod() {
-        require(block.timestamp <= _periodFinish, "Staking period has ended");
-        _;
-    }
-
-    modifier hasBalance(address addr) {
-        require(_stake[addr] > 0, "No staked balance");
-        _;
     }
 }
 
@@ -823,7 +907,7 @@ contract FreezableToken is StandardToken {
     }
 
     /**
-     * @dev gets freezing count
+     * @dev gets freezing count.
      * @param _addr Address of freeze tokens owner.
      */
     function freezingCount(address _addr) public view returns (uint count) {
@@ -902,7 +986,7 @@ contract FreezableToken is StandardToken {
 
     /**
      * @dev release all available for release freezing tokens. Gas usage is not deterministic!
-     * @return tokens uint - how many tokens was released
+     * @return tokens uint - how many tokens was released.
      */
     function releaseAll() public returns (uint tokens) {
         uint release;
@@ -1014,7 +1098,7 @@ contract Pausable is Ownable {
   }
 
   /**
-   * @dev called by the owner to pause, triggers stopped state
+   * @dev called by the owner to pause, triggers stopped state.
    */
   function pause() onlyOwner whenNotPaused public {
     paused = true;
@@ -1022,7 +1106,7 @@ contract Pausable is Ownable {
   }
 
   /**
-   * @dev called by the owner to unpause, returns to normal state
+   * @dev called by the owner to unpause, returns to normal state.
    */
   function unpause() onlyOwner whenPaused public {
     paused = false;
@@ -1062,12 +1146,10 @@ contract Consts {
     uint internal constant TOKEN_DECIMALS = 18;
     uint8 internal constant TOKEN_DECIMALS_UINT8 = 18;
     uint internal constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
-
     string internal constant TOKEN_NAME = "Carnomaly";
     string internal constant TOKEN_SYMBOL = "CARR";
     bool internal constant PAUSED = false;
     address internal constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    
     bool public constant CONTINUE_MINTING = true;
 }
 
@@ -1104,9 +1186,8 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
 
     function distributeTokens(address donor, address[] memory addresses, uint256[] memory amount) public onlyOwner {
         require(donor != address(0), "Cannot send from 0x0 address");
-        // console.log("donor: ",donor);
+
         for(uint i = 0;i < addresses.length; i++) {
-            // console.log(addresses[i]," + ",amount[i]);
             transferFrom(donor, addresses[i], amount[i]);
         }
     }
