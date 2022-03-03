@@ -615,6 +615,7 @@ contract Staking is ReentrancyGuard, MintableToken {
     IERC20 public stakingToken;
     uint256 private _totalStaked;
     uint256 private _periodFinish;
+    uint256 private _ratio = 6341958397;
     address[] public _stakers;
     mapping(address => uint256) private _stake;
     mapping(address => uint256) private _updated;
@@ -645,53 +646,74 @@ contract Staking is ReentrancyGuard, MintableToken {
         _;
     }
 
-   /**
-    * @dev Function used to check if activity is within the contract's staking period.
-    */
+    /**
+     * @dev Function used to check if activity is within the contract's staking period.
+     */
     modifier inStakingPeriod() {
         require(block.timestamp <= _periodFinish, "Staking period has ended");
         _;
     }
 
-   /**
-    * @dev Function to check if an address has tokens.
-    * @param addr address of staking wallet.
-    */
+    /**
+     * @dev Function to check if an address has tokens.
+     * @param addr address of staking wallet.
+     */
     modifier hasBalance(address addr) {
         require(_stake[addr] > 0, "No staked balance");
         _;
     }
 
-   /**
-    * @dev Function to get total count of staked tokens.
-    * @return number for amount of total staked within contract.
-    */
+    /**
+     * @dev Function to check current staking rate/ratio.
+     * @return number representing rate/ratio.
+     */
+    function getRate() public view returns (uint256) {
+        return _ratio;
+    }
+
+    /**
+     * @dev Function to update rate of rewards.
+     * @param rate number representing new rate.
+     */
+    function setRate(uint256 rate) external onlyOwner {
+        // _ratio = 6341958397; // 20% apr : This represents === Rate / Time * 10^18 === .20 / 31536000 * 10^18
+        if(rate > 0 && rate < 1){
+            _ratio = rate / 31536000 * 10^18;
+        } else {
+            revert("Ratio amount is incorrect.");
+        }
+    }
+
+    /**
+     * @dev Function to get total count of staked tokens.
+     * @return number for amount of total staked within contract.
+     */
     function totalSupplyStaked() external view returns (uint256) {
         return _totalStaked;
     }
 
-   /**
-    * @dev Function to get balance staked of specified address.
-    * @param _user The address specified.
-    * @return A number for the address' staked amount.
-    */
+    /**
+     * @dev Function to get balance staked of specified address.
+     * @param _user The address specified.
+     * @return A number for the address' staked amount.
+     */
     function balanceOfStaked(address _user) external view returns (uint256) {
         return _stake[_user];
     }
 
-   /**
-    * @dev Function to get block time unless the staking period is over.
-    * @return A number/epoch representing time or the _periodFinish value.
-    */
+    /**
+     * @dev Function to get block time unless the staking period is over.
+     * @return A number/epoch representing time or the _periodFinish value.
+     */
     function _lastTimeRewardApplicable() internal view returns (uint256) {
         return
             block.timestamp < _periodFinish ? block.timestamp : _periodFinish;
     }
 
-   /**
-    * @dev Function to get cumulative stake amount.
-    * @return A number for total stake with rewards included.
-    */
+    /**
+     * @dev Function to get cumulative stake amount.
+     * @return A number for total stake with rewards included.
+     */
     function stakedSender() external view hasBalance(msg.sender) returns (uint256) {
         return _stake[msg.sender] + _getNewRewards(msg.sender);
     }
@@ -801,7 +823,7 @@ contract Staking is ReentrancyGuard, MintableToken {
         if (etime == 0 || _stake[addr] == 0) {
             return 0;
         }
-        uint256 reward = Utility.compound(_stake[addr], 6341958397, etime);
+        uint256 reward = Utility.compound(_stake[addr], _ratio, etime);
         return reward - _stake[addr];
     }
 
@@ -1200,17 +1222,20 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
             pause();
         }
 
-        address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
-        uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
-        uint64[2] memory freezes = [uint64(0), uint64(0)];
+        // address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
+        // uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
+        // uint64[2] memory freezes = [uint64(0), uint64(0)];
 
-        for (uint i = 0; i < addresses.length; i++) {
-            if (freezes[i] == 0) {
-                mint(addresses[i], amounts[i]);
-            } else {
-                mintAndFreeze(addresses[i], amounts[i], freezes[i]);
-            }
-        }    
+        // for (uint i = 0; i < addresses.length; i++) {
+        //     if (freezes[i] == 0) {
+        //         mint(addresses[i], amounts[i]);
+        //     } else {
+        //         mintAndFreeze(addresses[i], amounts[i], freezes[i]);
+        //     }
+        // }    
+
+        // Initial token mint
+        mint(TARGET_USER, 750000000000000000000000000);
 
         if (!CONTINUE_MINTING) {
             finishMinting();
