@@ -1168,7 +1168,7 @@ contract Consts {
     string internal constant TOKEN_NAME = "Carnomaly";
     string internal constant TOKEN_SYMBOL = "CARR";
     bool internal constant PAUSED = false;
-    address internal constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address internal constant TARGET_USER = 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC;
     bool public constant CONTINUE_MINTING = true;
 }
 
@@ -1217,19 +1217,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
 
         if (PAUSED) {
             pause();
-        }
-
-        // address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
-        // uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
-        // uint64[2] memory freezes = [uint64(0), uint64(0)];
-
-        // for (uint i = 0; i < addresses.length; i++) {
-        //     if (freezes[i] == 0) {
-        //         mint(addresses[i], amounts[i]);
-        //     } else {
-        //         mintAndFreeze(addresses[i], amounts[i], freezes[i]);
-        //     }
-        // }    
+        }  
 
         // Initial token mint
         mint(TARGET_USER, 750000000000000000000000000);

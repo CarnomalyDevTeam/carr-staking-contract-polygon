@@ -222,12 +222,16 @@ describe.only('Carnomaly', function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
       });
       it("Has ability to withdraw partial stake of 33210 (reward amount)", async function () {
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000700000");  
         await carrToken.withdraw("33210");
         expect(await carrToken.rewardsOf(owner.address)).to.equal(0);
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000666790");      
       });
       it("Has ability to withdraw all, the remainder", async function () {
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000666790");  
         await carrToken.withdrawAll();
         expect(await carrToken.balanceOfStaked(owner.address)).to.equal(0);
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000516790");  
       });
       it("33210 in rewards are reflected in overall wallet balance", async function () {
         expect(await carrToken.balanceOf(owner.address)).to.equal("747449499999999999999483210");
