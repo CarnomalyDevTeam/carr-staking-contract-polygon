@@ -677,11 +677,8 @@ contract Staking is ReentrancyGuard, MintableToken {
      */
     function setRate(uint256 rate) external onlyOwner {
         // _ratio = 6341958397; // 20% apr : This represents === Rate / Time * 10^18 === .20 / 31536000 * 10^18
-        if(rate > 0 && rate < 1){
-            _ratio = rate / 31536000 * 10^18;
-        } else {
-            revert("Ratio amount is incorrect.");
-        }
+        require(rate > 0);
+        _ratio = rate;
     }
 
     /**
