@@ -181,11 +181,11 @@ describe.only('Carnomaly', function () {
       });
       it("Accepts a pre-calculated stake amount transaction from Owner", async function () {
         //fund test wallets so they can stake
-        await carrToken.transfer("0xBcd4042DE499D14e55001CcbB24a551F3b954096", "10000000000000000000000");
-        await carrToken.transfer("0x71bE63f3384f5fb98995898A86B02Fb2426c5788", "44000000000000000000000");
-        await carrToken.transfer("0xFABB0ac9d68B0B445fB7357272Ff202C5651694a", "23000000000000000000000");
-        await carrToken.transfer("0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec", "440000000000000000000000");
-        await carrToken.transfer("0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097", "840000000000000000000000");
+        // await carrToken.transfer("0xBcd4042DE499D14e55001CcbB24a551F3b954096", "10000000000000000000000");
+        // await carrToken.transfer("0x71bE63f3384f5fb98995898A86B02Fb2426c5788", "44000000000000000000000");
+        // await carrToken.transfer("0xFABB0ac9d68B0B445fB7357272Ff202C5651694a", "23000000000000000000000");
+        // await carrToken.transfer("0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec", "440000000000000000000000");
+        // await carrToken.transfer("0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097", "840000000000000000000000");
 
         await carrToken.migrationStake(manualStake[0][0], manualStake[0][1]);
         await carrToken.migrationStake(manualStake[1][0], manualStake[1][1]);
@@ -222,19 +222,21 @@ describe.only('Carnomaly', function () {
         expect(await carrToken.rewardsOf(owner.address)).to.equal("33210");
       });
       it("Has ability to withdraw partial stake of 33210 (reward amount)", async function () {
-        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000700000");  
+        //withdraw only rewards of owner.address
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("700000");  
         await carrToken.withdraw("33210");
         expect(await carrToken.rewardsOf(owner.address)).to.equal(0);
-        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000666790");      
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("666790");      
       });
       it("Has ability to withdraw all, the remainder", async function () {
-        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000666790");  
+        //withdraw the rest from owner.address (the stake principal)
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("666790");  
         await carrToken.withdrawAll();
         expect(await carrToken.balanceOfStaked(owner.address)).to.equal(0);
-        expect(await carrToken.balanceOf(carrToken.address)).to.equal("1540000000000000000516790");  
+        expect(await carrToken.balanceOf(carrToken.address)).to.equal("516790");  
       });
       it("33210 in rewards are reflected in overall wallet balance", async function () {
-        expect(await carrToken.balanceOf(owner.address)).to.equal("747449499999999999999483210");
+        expect(await carrToken.balanceOf(owner.address)).to.equal("748806499999999999999483210");
       });
       it("Set the finishTime to 1 year after deposit", async function () {
          // finish 1 year after deposit

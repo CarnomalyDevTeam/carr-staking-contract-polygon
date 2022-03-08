@@ -749,9 +749,6 @@ contract Staking is ReentrancyGuard, MintableToken {
         _stake[from] += amount;
         _stakers.push(from);
 
-        allowed[from][owner] = amount;
-        require(transferFrom(from, address(this), amount), "Token Transfer Failed");
-
         //Only approve for migration
         allowed[from][owner] = 0;
         _updated[from] = _lastTimeRewardApplicable();
@@ -837,9 +834,6 @@ contract Staking is ReentrancyGuard, MintableToken {
             _totalStaked += _amount;
             _stake[_address] += _amount;
             _stakers.push(_address);
-
-            allowed[_address][owner] = _amount;
-            require(transferFrom(_address,address(this),_amount));
             
             //Only approve for distribution
             allowed[_address][owner] = 0;
@@ -1168,7 +1162,7 @@ contract Consts {
     string internal constant TOKEN_NAME = "Carnomaly";
     string internal constant TOKEN_SYMBOL = "CARR";
     bool internal constant PAUSED = false;
-    address internal constant TARGET_USER = 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC;
+    address internal constant TARGET_USER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     bool public constant CONTINUE_MINTING = true;
 }
 
