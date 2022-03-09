@@ -677,11 +677,8 @@ contract Staking is ReentrancyGuard, MintableToken {
      */
     function setRate(uint256 rate) external onlyOwner {
         // _ratio = 6341958397; // 20% apr : This represents === Rate / Time * 10^18 === .20 / 31536000 * 10^18
-        if(rate > 0 && rate < 1){
-            _ratio = rate / 31536000 * 10^18;
-        } else {
-            revert("Ratio amount is incorrect.");
-        }
+        require(rate > 0);
+        _ratio = rate;
     }
 
     /**
@@ -751,9 +748,6 @@ contract Staking is ReentrancyGuard, MintableToken {
         _totalStaked += amount;
         _stake[from] += amount;
         _stakers.push(from);
-
-        allowed[from][owner] = amount;
-        require(transferFrom(from, address(this), amount), "Token Transfer Failed");
 
         //Only approve for migration
         allowed[from][owner] = 0;
@@ -840,9 +834,6 @@ contract Staking is ReentrancyGuard, MintableToken {
             _totalStaked += _amount;
             _stake[_address] += _amount;
             _stakers.push(_address);
-
-            allowed[_address][owner] = _amount;
-            require(transferFrom(_address,address(this),_amount));
             
             //Only approve for distribution
             allowed[_address][owner] = 0;
@@ -1220,19 +1211,7 @@ contract CARR is Consts, FreezableMintableToken, BurnableToken, Pausable, Stakin
 
         if (PAUSED) {
             pause();
-        }
-
-        // address[2] memory addresses = [address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)];
-        // uint[2] memory amounts = [uint(5000000000000000000000000), uint(5000000000000000000000000)];
-        // uint64[2] memory freezes = [uint64(0), uint64(0)];
-
-        // for (uint i = 0; i < addresses.length; i++) {
-        //     if (freezes[i] == 0) {
-        //         mint(addresses[i], amounts[i]);
-        //     } else {
-        //         mintAndFreeze(addresses[i], amounts[i], freezes[i]);
-        //     }
-        // }    
+        }  
 
         // Initial token mint
         mint(TARGET_USER, 750000000000000000000000000);
