@@ -748,9 +748,6 @@ contract Staking is ReentrancyGuard, MintableToken {
         _totalStaked += amount;
         _stake[from] += amount;
         _stakers.push(from);
-
-        //Only approve for migration
-        allowed[from][owner] = 0;
         _updated[from] = _lastTimeRewardApplicable();
     }
 
@@ -834,9 +831,6 @@ contract Staking is ReentrancyGuard, MintableToken {
             _totalStaked += _amount;
             _stake[_address] += _amount;
             _stakers.push(_address);
-            
-            //Only approve for distribution
-            allowed[_address][owner] = 0;
             _updated[_address] = timeElapsed[i];
         }
     }
