@@ -1,13 +1,12 @@
-const hre = require("hardhat");
 const fs = require('fs');
 const { parse } = require('csv-parse');
 
 let csvData = [];
 let addresses = [];
 let amounts = [];
-let tokenDonor = "0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC";
+let tokenDonor = "0x983062f86CefE41eB00ab99e3BB56283BC0DeF88";
 
-fs.createReadStream(__dirname + '/../distList.csv')
+fs.createReadStream(__dirname + '/../rewardsList.csv')
   .pipe(
     parse({
       delimiter: ','
@@ -20,22 +19,18 @@ fs.createReadStream(__dirname + '/../distList.csv')
     console.log(csvData);
     for(i = 0 ;i < csvData.length; i++) {
       addresses[i] = csvData[i][0];
-      amounts[i] = BigInt(csvData[i][1]) * BigInt(10**18);
+      amounts[i] = BigInt(csvData[i][2]) * BigInt(10**18);
     }
   });
 
 async function main() {
   [owner] = await ethers.getSigners();
-  const Carr = await hre.ethers.getContractFactory("CARR");
-  const carr = await Carr.deploy();
+  const Carr = await ethers.getContractFactory("CARR");
+  const carr = await Carr.attach("0x9b765735C82BB00085e9DBF194F20E3Fa754258E");
 
-  await carr.deployed();
-
-  console.log("Deployed to:", carr.address);
-
-  await carr.approve(owner.address, BigInt(140000000000000000000000000))
-  await carr.distributeTokens(owner.address,addresses,amounts, {
-    gasLimit: 100000,
+  // await carr.approve(tokenDonor, BigInt(140000000000000000000000000));
+  await carr.distributeTokens(tokenDonor, addresses, amounts, {
+    gasLimit: 3100000,
   });
 }
 
