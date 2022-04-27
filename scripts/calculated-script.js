@@ -28,7 +28,7 @@ fs.createReadStream(__dirname + fnlFile)
   });
 
 async function main() {
-  //Deploy Smart Contract
+  //Attach to Smart Contract on Mainnet
   const Carr = await hre.ethers.getContractFactory("CARR");
   const carr = await Carr.attach("0x9b765735C82BB00085e9DBF194F20E3Fa754258E");
   
