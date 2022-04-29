@@ -6,7 +6,7 @@ let addresses = [];
 let amounts = [];
 let tokenDonor = "0x983062f86CefE41eB00ab99e3BB56283BC0DeF88";
 
-fs.createReadStream(__dirname + '/../rewardsList.csv')
+fs.createReadStream(__dirname + '/../reports/rewardsList.csv')
   .pipe(
     parse({
       delimiter: ','
