@@ -8,7 +8,7 @@ let amounts = [];
 let elapsed = [];
 let depositTime;
 
-const fnlFile = '/../calcStake.csv';
+const fnlFile = '/../reports/calcStake.csv';
 
 fs.createReadStream(__dirname + fnlFile)
   .pipe(
