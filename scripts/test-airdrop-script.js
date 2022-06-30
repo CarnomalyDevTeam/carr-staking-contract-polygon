@@ -5,9 +5,9 @@ const { parse } = require('csv-parse');
 let csvData = [];
 let addresses = [];
 let amounts = [];
-let tokenDonor = "0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC";
+let tokenDonor = "0x983062f86CefE41eB00ab99e3BB56283BC0DeF88";
 
-fs.createReadStream(__dirname + '/../distList.csv')
+fs.createReadStream(__dirname + '/../reports/distList.csv')
   .pipe(
     parse({
       delimiter: ','

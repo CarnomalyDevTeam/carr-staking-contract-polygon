@@ -45,13 +45,15 @@ export default {
     },
     mumbai: {
       url: 'https://matic-mumbai.chainstacklabs.com',
-      gasPrice: 225000000000,
+      gasPrice: "auto",
+      gas: "auto",
       chainId: 80001,
       accounts: []
     },
     Polygon: {
       url: 'https://polygon-rpc.com',
-      gasPrice: 225000000000,
+      gasPrice: "auto",
+      gas: "auto",
       chainId: 137,
       accounts: []
     }
