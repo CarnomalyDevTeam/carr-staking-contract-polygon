@@ -556,7 +556,7 @@ contract MintableToken is StandardToken, Ownable {
    * @dev Function to check if token cap has been reached.
    */
   modifier mintCap() {
-    require(totalSupply_ <= 999000000000000000000000000, "Token cap reached");
+    require(totalSupply_ <= 2000000000000000000000000000, "Token cap reached");
     _;
   }
 
@@ -565,7 +565,7 @@ contract MintableToken is StandardToken, Ownable {
    * @return number representing remaining amount.
    */
   function tokensUntilCap() public view returns (uint256) {
-      uint256 remains = 999000000000000000000000000 - totalSupply_;
+      uint256 remains = 2000000000000000000000000000 - totalSupply_;
       return remains;
   }
 
