@@ -43,25 +43,16 @@ export default {
     localhost: {
       url: "http://127.0.0.1:8545"
     },
-    localAvax: {
-      url: "http://localhost:37870/ext/bc/C/rpc",
+    mumbai: {
+      url: 'https://matic-mumbai.chainstacklabs.com',
       gasPrice: 225000000000,
-      chainId: 43112,
-      accounts: [
-        "0x56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027",
-        "0x7b4198529994b0dc604278c99d153cfd069d594753d471171a1d102a10438e07",
-      ]
-    },
-    fuji: {
-      url: 'https://api.avax-test.network/ext/bc/C/rpc',
-      gasPrice: 225000000000,
-      chainId: 43113,
+      chainId: 80001,
       accounts: []
     },
-    mainnet: {
-      url: 'https://api.avax.network/ext/bc/C/rpc',
+    Polygon: {
+      url: 'https://polygon-rpc.com',
       gasPrice: 225000000000,
-      chainId: 43114,
+      chainId: 137,
       accounts: []
     }
   }
