@@ -1,3 +1,9 @@
+// 1. Attach Proper smart contract address
+// 2. uncomment/comment transfer amount to Smart contract
+// 3. Comment/ uncomment^
+// 4. Split the csv inputs for cost tracking
+// 5. Perform DistRewards
+
 const fs = require('fs');
 const { parse } = require('csv-parse');
 const hre = require("hardhat");
@@ -31,15 +37,15 @@ fs.createReadStream(__dirname + fnlFile)
 async function main() {
   //Attach to Smart Contract on Mainnet
   const Carr = await hre.ethers.getContractFactory("CARR");
-  const carr = await Carr.attach("0x9b765735C82BB00085e9DBF194F20E3Fa754258E");
+  const carr = await Carr.attach("0xDfa3e8710820683ACd3fa2D40c9621f9F32f771B");
 
   // transfer CARR to contract
-  let tx = await carr.transfer(carr.address, "");
-  await tx.wait();
+  // let tx = await carr.transfer(carr.address, "");
+  // await tx.wait();
 
   //Call distribute Rewards function after airdrop operation
   const distRewards = await carr.distributeRewards(addresses, amounts, elapsed, {
-    gasLimit: 3000000,
+    gasLimit: 3100000,
   });
   await distRewards.wait();
 }

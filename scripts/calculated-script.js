@@ -5,8 +5,6 @@ const hre = require("hardhat");
 let csvData = [];
 let addresses = [];
 let amounts = [];
-let elapsed = [];
-let depositTime;
 
 const fnlFile = '/../reports/calcStake.csv';
 
@@ -30,7 +28,7 @@ fs.createReadStream(__dirname + fnlFile)
 async function main() {
   //Attach to Smart Contract on Mainnet
   const Carr = await hre.ethers.getContractFactory("CARR");
-  const carr = await Carr.attach("0x9b765735C82BB00085e9DBF194F20E3Fa754258E");
+  const carr = await Carr.attach("0xDfa3e8710820683ACd3fa2D40c9621f9F32f771B");
   
   //transfer CARR to wallets
   // let tx = await carr.transfer(carr.address, "20350000000000000000000000");
